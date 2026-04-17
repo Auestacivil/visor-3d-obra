@@ -1,36 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Visor 3D Obra</title>
-
-  <script type="module"
-    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
-  </script>
-
-  <style>
-    body { margin: 0; }
-    model-viewer {
-      width: 100%;
-      height: 100vh;
-      background: #f2f2f2;
-    }
-
-    #btn {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #d9534f;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      border: none;
-      font-weight: bold;
-    }
-  </style>
 </head>
-
 
 <body>
 
@@ -50,7 +18,6 @@
 const params = new URLSearchParams(window.location.search);
 const viewer = document.getElementById("viewer");
 
-// Parámetros desde QR
 const target = params.get("target");
 const orbit = params.get("orbit");
 
@@ -62,7 +29,6 @@ if (orbit) {
   viewer.setAttribute("camera-orbit", orbit.replace(/,/g, " "));
 }
 
-// Botón recalibrar
 document.getElementById("btn").onclick = () => {
   viewer.setAttribute("camera-target", "0m 3.89m 0m");
   viewer.setAttribute("camera-orbit", "0deg 75deg 5m");
