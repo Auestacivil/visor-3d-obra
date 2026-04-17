@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Visor AR Industrial</title>
+    <title>Alinco - Control de Altura AR</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -9,7 +9,6 @@
         :root { --primary: #004a99; --accent: #d9534f; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; overflow: hidden; }
         
-        /* Contenedor Principal de UI */
         #ui-container {
             position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
             transition: transform 0.3s ease-in-out;
@@ -21,19 +20,19 @@
         }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .header h2 { margin: 0; font-size: 16px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        .header h2 { margin: 0; font-size: 16px; color: var(--primary); text-transform: uppercase; }
 
         .group { margin-bottom: 15px; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
         
-        input[type="number"], input[type="file"] {
+        input[type="number"] {
             width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
-            font-size: 15px; box-sizing: border-box; background: white;
+            font-size: 18px; box-sizing: border-box; font-weight: bold;
         }
 
         .btn-main {
             width: 100%; padding: 16px; border: none; border-radius: 8px;
-            font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;
+            font-weight: bold; font-size: 16px; cursor: pointer;
             background-color: var(--accent); color: white;
         }
         
@@ -43,40 +42,34 @@
             font-weight: bold; cursor: pointer; z-index: 101;
         }
 
-        /* Estilos del Visor */
-        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
+        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
         .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: #ff0000; border: 3px solid white; box-shadow: 0 0 15px red; }
-        #ar-button { display: none; } /* Ocultamos el nativo para usar el nuestro */
+        #ar-button { display: none; }
     </style>
 </head>
 <body>
 
-    <button id="toggle-ui">▼</button>
+    <button id="toggle-ui">▲</button>
 
     <div id="ui-container">
         <div id="ui-panel">
             <div class="header">
                 <h2>Alinco Ingeniería</h2>
-                <span style="font-size: 10px; background: #eee; padding: 3px 7px; border-radius: 10px;">V 2.0</span>
+                <span style="font-size: 10px; font-weight: bold;">HUMAX</span>
             </div>
 
             <div class="group">
-                <label>MODELO ESTRUCTURAL (.GLB)</label>
-                <input type="file" id="file-upload" accept=".glb">
-            </div>
-
-            <div class="group">
-                <label>COTA DE INSPECCIÓN (METROS Z)</label>
+                <label>DEFINIR ALTURA DE VIGA (METROS)</label>
                 <input type="number" id="z-height" value="0.00" step="0.01">
             </div>
 
-            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA (1:1)</button>
+            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA</button>
         </div>
     </div>
 
     <model-viewer 
         id="alinco-viewer"
-        src="" 
+        src="3dExport.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
@@ -88,19 +81,10 @@
 
     <script>
         const viewer = document.querySelector('#alinco-viewer');
-        const fileIn = document.querySelector('#file-upload');
         const heightIn = document.querySelector('#z-height');
         const arBtn = document.querySelector('#start-ar');
         const toggleBtn = document.querySelector('#toggle-ui');
         const uiContainer = document.querySelector('#ui-container');
-
-        // Carga de archivo local
-        fileIn.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                viewer.src = URL.createObjectURL(file);
-            }
-        });
 
         // Toggle para ocultar interfaz
         let uiVisible = true;
@@ -110,13 +94,10 @@
             toggleBtn.textContent = uiVisible ? '▲' : '▼';
         });
 
-        // Iniciar AR con altura dinámica
+        // Iniciar AR y actualizar el target según la altura ingresada
         arBtn.addEventListener('click', () => {
-            if (!viewer.src) {
-                alert("Seleccione un archivo GLB primero");
-                return;
-            }
             const h = heightIn.value || 0;
+            // Ajustamos la cámara para que apunte a la altura deseada
             viewer.cameraTarget = `0m ${h}m 0m`;
             viewer.activateAR();
         });
