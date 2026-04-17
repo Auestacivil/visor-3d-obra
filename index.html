@@ -4,71 +4,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-        /* Panel de control que SÍ se verá en iPhone */
-        #alinco-ui {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1000; pointer-events: none; /* Deja pasar los clics al 3D */
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .btn-panel {
-            pointer-events: auto; background: rgba(255,255,255,0.9);
-            padding: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .btn-reset {
-            pointer-events: auto; align-self: flex-end; margin: 20px;
-            padding: 15px 25px; background: #004a99; color: white;
-            border: none; border-radius: 50px; font-weight: bold;
-        }
-        input { width: 60px; padding: 5px; font-size: 16px; }
-    </style>
 </head>
-<body>
-
-    <div id="alinco-ui">
-        <div class="btn-panel">
-            <b style="color:#004a99">ALINCO AR</b> | 
-            Cota Z: <input type="number" id="z-val" value="7.00" step="0.1"> m
-        </div>
-        <button class="btn-reset" id="reset-btn">📍 VOLVER AL QR (0,0,0)</button>
-    </div>
+<body style="margin:0; overflow:hidden;">
 
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind;" 
+        mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiLoading: yes;" 
         color-space="sRGB" 
         renderer="colorManagement: true, physicallyCorrectLights" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
+        <a-assets>
+            <a-asset-item id="modeloBim" src="3dExport.glb"></a-asset-item>
+        </a-assets>
+
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity id="anchor" mindar-image-target="targetIndex: 0">
-            <a-gltf-model 
-                id="modelo-3d" 
-                src="3dExport.glb" 
-                rotation="90 0 0" 
-                position="0 0 0" 
-                scale="1 1 1">
-            </a-gltf-model>
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-gltf-model src="#modeloBim" position="0 0 0" rotation="90 0 0" scale="1 1 1"></a-gltf-model>
         </a-entity>
+
     </a-scene>
 
     <script>
-        const modelo = document.querySelector('#modelo-3d');
-        const zInput = document.querySelector('#z-val');
-        const resetBtn = document.querySelector('#reset-btn');
-
-        // Actualizar altura dinámicamente
-        zInput.addEventListener('change', () => {
-            const z = zInput.value;
-            // En A-Frame, los ejes pueden variar, ajustamos según la exportación
-            modelo.setAttribute('position', `0 ${z} 0`);
-        });
-
-        // Botón Reset: Lleva la máquina al suelo
-        resetBtn.addEventListener('click', () => {
-            zInput.value = 0;
-            modelo.setAttribute('position', '0 0 0');
+        // Detector de errores para el ingeniero
+        const sceneEl = document.querySelector('a-scene');
+        sceneEl.addEventListener("arError", (event) => {
+            alert("Error de AR: Asegúrate de haber subido el archivo .mind y dar permisos de cámara");
         });
     </script>
 </body>
