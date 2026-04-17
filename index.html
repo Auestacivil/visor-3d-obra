@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Control de Altura AR</title>
+    <title>Alinco - Visor AR con Zoom</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -55,15 +55,15 @@
         <div id="ui-panel">
             <div class="header">
                 <h2>Alinco Ingeniería</h2>
-                <span style="font-size: 10px; font-weight: bold;">HUMAX</span>
+                <span style="font-size: 10px; font-weight: bold;">ZOOM ACTIVO</span>
             </div>
 
             <div class="group">
-                <label>DEFINIR ALTURA DE VIGA (METROS)</label>
+                <label>DEFINIR ALTURA (Z EN METROS)</label>
                 <input type="number" id="z-height" value="0.00" step="0.01">
             </div>
 
-            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA</button>
+            <button class="btn-main" id="start-ar">ENFOCAR Y PROYECTAR</button>
         </div>
     </div>
 
@@ -74,6 +74,7 @@
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
         camera-controls 
+        interpolation-decay="200"
         shadow-intensity="1">
         
         <button class="dot-qr" slot="hotspot-0" data-position="0 0 0" data-normal="0 1 0"></button>
@@ -86,7 +87,7 @@
         const toggleBtn = document.querySelector('#toggle-ui');
         const uiContainer = document.querySelector('#ui-container');
 
-        // Toggle para ocultar interfaz
+        // Función de Toggle UI
         let uiVisible = true;
         toggleBtn.addEventListener('click', () => {
             uiVisible = !uiVisible;
@@ -94,12 +95,20 @@
             toggleBtn.textContent = uiVisible ? '▲' : '▼';
         });
 
-        // Iniciar AR y actualizar el target según la altura ingresada
         arBtn.addEventListener('click', () => {
             const h = heightIn.value || 0;
-            // Ajustamos la cámara para que apunte a la altura deseada
+            
+            // 1. ZOOM: Movemos el objetivo (Target) a la altura definida
             viewer.cameraTarget = `0m ${h}m 0m`;
-            viewer.activateAR();
+            
+            // 2. ACERCAMIENTO: Ajustamos el radio de la cámara a 2 metros del objeto
+            // Formato: (Azimuth, Tilt, Radius)
+            viewer.cameraOrbit = `45deg 75deg 2m`; 
+
+            // 3. Iniciar Realidad Aumentada
+            setTimeout(() => {
+                viewer.activateAR();
+            }, 500); // Pequeña pausa para que el zoom se procese antes de entrar a AR
         });
     </script>
 </body>
