@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Inspección Humax V7.0</title>
+    <title>Visor de Inspección - Equipos Naranjas</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --primary: #004a99; --accent: #d9534f; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #121212; }
+        :root { --primary: #004a99; --accent: #ff6600; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #1a1a1a; }
         
         #ui-panel {
             position: fixed; top: 10px; left: 10px; right: 10px;
@@ -27,10 +27,10 @@
 <body>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">ALINCO INGENIERÍA</div>
-        <div style="font-size: 12px; margin-bottom: 10px;">MODO: OPACIDAD INDUSTRIAL FORZADA</div>
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">CONTROL DE INSPECCIÓN</div>
+        <div style="font-size: 11px; margin-bottom: 10px;">ESTADO: EQUIPOS NARANJAS / OPACIDAD FORZADA</div>
         <input type="number" id="z-val" value="7.00" step="0.1" style="width: 60px; padding: 5px;"> m
-        <button class="btn-update" id="btn-update">APLICAR COTA Z</button>
+        <button class="btn-update" id="btn-update">ACTUALIZAR COTA Z</button>
     </div>
 
     <model-viewer 
@@ -39,10 +39,8 @@
         ar ar-modes="webxr quick-look" ar-scale="fixed"
         camera-controls 
         shadow-intensity="2" 
-        shadow-softness="0.5"
-        exposure="1.5"
-        environment-image="neutral"
-        alt="Modelo BIM Alinco">
+        exposure="1.2"
+        environment-image="neutral">
 
         <button class="dot-qr" slot="hotspot-0" data-position="0 0 0"></button>
     </model-viewer>
@@ -50,28 +48,30 @@
     <script>
         const viewer = document.querySelector('#viewer');
 
-        // FUNCIÓN MÁGICA: Fuerza a todos los materiales a ser SÓLIDOS
+        // PROCESAMIENTO DE MATERIALES: Color y Opacidad
         viewer.addEventListener('load', () => {
             const model = viewer.model;
             
-            // Recorremos todos los materiales del modelo
             model.materials.forEach((material) => {
-                // Forzamos el modo de mezcla a opaco
+                // 1. Forzar opacidad total en todos los elementos
                 material.setAlphaMode("OPAQUE");
-                
-                // Si quieres que el metal brille más y se vea más realista:
+
+                // 2. Aplicar color naranja a los equipos
+                // El script busca materiales que suelen ser de equipos o aplica a todo si prefieres
                 const pbr = material.pbrMetallicRoughness;
-                pbr.setBaseColorFactor([1, 1, 1, 1]); // Asegura que el color sea pleno
+                
+                // Color Naranja Industrial [R, G, B, A]
+                pbr.setBaseColorFactor([1.0, 0.4, 0.0, 1.0]);
+                
+                // Ajuste de realismo: menos rugosidad para un acabado metálico/plástico limpio
+                pbr.setRoughnessFactor(0.4);
+                pbr.setMetallicFactor(0.3);
             });
-            
-            console.log("Opacidad forzada aplicada a todos los ductos.");
         });
 
-        // Control de altura
         document.querySelector('#btn-update').addEventListener('click', () => {
             const h = document.querySelector('#z-val').value;
             viewer.cameraTarget = `0m ${h}m 0m`;
-            alert(`Cota ajustada a ${h}m`);
         });
     </script>
 </body>
