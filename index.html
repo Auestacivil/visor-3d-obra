@@ -1,121 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Alinco AR - Control de Obra</title>
-    
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
+    <title>Alinco - Inspección Humax (V5.0)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --blue: #004a99; --red: #d9534f; }
-        body { margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; }
-
-        /* INTERFAZ SOBRE LA CÁMARA (No desaparecerá en iPhone) */
-        #alinco-dashboard {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999; pointer-events: none; /* Permite tocar el 3D */
-            display: flex; flex-direction: column; justify-content: space-between;
+        :root { --primary: #004a99; --accent: #d9534f; }
+        body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: #f5f5f5; }
+        
+        /* Panel de Control (Siempre visible en 3D) */
+        #ui-panel {
+            position: fixed; top: 15px; left: 15px; right: 15px;
+            background: white; padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 100;
         }
 
-        .top-bar {
-            pointer-events: auto; background: rgba(255,255,255,0.95);
-            padding: 15px; border-bottom: 3px solid var(--blue);
-            display: flex; justify-content: space-between; align-items: center;
+        .input-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; }
+        
+        input[type="number"] {
+            width: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 18px; font-weight: bold; text-align: center;
         }
 
-        .bottom-bar {
-            pointer-events: auto; padding: 20px;
-            display: flex; justify-content: center;
+        button#update-3d {
+            width: 100%; padding: 12px; background: var(--primary);
+            color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
         }
 
-        .btn-reset {
-            background: var(--blue); color: white; border: 2px solid white;
-            padding: 15px 30px; border-radius: 50px; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        /* Visor 3D */
+        model-viewer { width: 100vw; height: 100vh; background-color: #fff; }
 
-        .height-control { font-weight: bold; color: #333; }
-        input { width: 70px; padding: 8px; font-size: 18px; border-radius: 5px; border: 1px solid #ccc; }
+        /* Puntos de Referencia */
+        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 3px solid white; box-shadow: 0 0 10px red; }
+        .dot-viga { width: 20px; height: 20px; border-radius: 50%; background: #007bff; border: 3px solid white; box-shadow: 0 0 10px #007bff; }
+        .label { background: #fff; border-radius: 4px; padding: 2px 6px; color: #333; font-size: 10px; font-weight: bold; white-space: nowrap; position: absolute; transform: translate(-50%, -150%); }
 
-        /* Pantalla de carga */
-        #loading-screen {
-            position: fixed; inset: 0; background: #121212; color: white;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
-        }
+        /* Estilo del botón nativo de AR (Abajo a la derecha) */
+        button slot[name="ar-button"] { display: none !important; } /* Ocultamos el nativo para controlarlo nosotros */
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <div style="font-size: 20px; margin-bottom: 20px;">ALINCO INGENIERÍA</div>
-        <div id="status">BUSCANDO QR DE REFERENCIA...</div>
+    <div id="ui-panel">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 10px;">ALINCO: INSPECCIÓN HUMAX</div>
+        <div class="input-group">
+            <label>COTA Z DE VIGA (METROS)</label>
+            <input type="number" id="z-val" value="7.00" step="0.01">
+        </div>
+        <button id="update-3d">AJUSTAR ALTURA EN 3D</button>
+        <div style="font-size: 11px; color: #888; margin-top: 10px; text-align: center;">Use el botón 'Ver en AR' nativo de la viga para proyectar</div>
     </div>
 
-    <div id="alinco-dashboard">
-        <div class="top-bar">
-            <div class="height-control">
-                COTA Z: <input type="number" id="z-input" value="0.00" step="0.1"> m
-            </div>
-            <div style="font-size: 10px; color: var(--blue); font-weight: bold;">HUMAX V4.0</div>
-        </div>
-
-        <div class="bottom-bar">
-            <button class="btn-reset" id="btn-000">📍 RESET A 0,0,0</button>
-        </div>
-    </div>
-
-    <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; uiLoading: no; autoStart: true;" 
-        embedded color-space="sRGB" 
-        renderer="colorManagement: true, physicallyCorrectLights" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: false">
+    <model-viewer 
+        id="alinco-viewer"
+        src="3dExport.glb" 
+        ar 
+        ar-modes="webxr quick-look" 
+        ar-scale="fixed" 
+        ar-placement="floor"
+        camera-controls 
+        interaction-prompt="auto"
+        shadow-intensity="1">
         
-        <a-assets>
-            <a-asset-item id="modeloBim" src="3dExport.glb"></a-asset-item>
-        </a-assets>
+        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0">
+            <div class="label">PUNTO 0.00 (QR)</div>
+        </button>
+        <button class="dot-viga" id="hotspot-viga" slot="hotspot-1" data-position="0 7 0">
+            <div class="label" id="label-viga">VIGA (7.00m)</div>
+        </button>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <a-entity id="target-anchor" mindar-image-target="targetIndex: 0">
-            
-            <a-gltf-model 
-                id="render-glb" 
-                src="#modeloBim" 
-                position="0 0 0" 
-                rotation="90 0 0" 
-                scale="1 1 1">
-            </a-gltf-model>
-
-            <a-sphere radius="0.05" color="red"></a-sphere>
-        </a-entity>
-    </a-scene>
+    </model-viewer>
 
     <script>
-        const anchor = document.querySelector('#target-anchor');
-        const model = document.querySelector('#render-glb');
-        const loading = document.querySelector('#loading-screen');
-        const zIn = document.querySelector('#z-input');
-        const resetBtn = document.querySelector('#btn-000');
+        const viewer = document.querySelector('#alinco-viewer');
+        const zIn = document.querySelector('#z-val');
+        const updateBtn = document.querySelector('#update-3d');
+        const hotspotViga = document.querySelector('#hotspot-viga');
+        const labelViga = document.querySelector('#label-viga');
 
-        // Cuando el iPhone detecta el QR, quitamos la pantalla de carga
-        anchor.addEventListener("targetFound", () => {
-            loading.style.display = 'none';
-            if (navigator.vibrate) navigator.vibrate(100);
-        });
-
-        // Control de altura en tiempo real
-        zIn.addEventListener('input', () => {
-            const h = zIn.value;
-            // Ajustamos la posición Y del modelo (que en A-Frame suele ser la altura)
-            model.setAttribute('position', `0 ${h} 0`);
-        });
-
-        // Botón Reset
-        resetBtn.addEventListener('click', () => {
-            zIn.value = 0;
-            model.setAttribute('position', '0 0 0');
+        updateBtn.addEventListener('click', () => {
+            const h = zIn.value || 0;
+            // 1. ZOOM EN 3D: Enfocamos la cámara a la nueva altura
+            viewer.cameraTarget = `0m ${h}m 0m`;
+            
+            // 2. ACTUALIZAR PUNTOS: Movemos el hotspot azul a la altura real
+            hotspotViga.setAttribute('data-position', `0 ${h} 0`);
+            labelViga.innerText = `VIGA (${h}m)`;
+            
+            // 3. Confirmación visual rápida
+            updateBtn.innerText = `ALTURA AJUSTADA A ${h}m`;
+            setTimeout(() => updateBtn.innerText = "AJUSTAR ALTURA EN 3D", 1500);
         });
     </script>
 </body>
