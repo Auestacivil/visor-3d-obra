@@ -1,101 +1,75 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <title>Alinco AR - Precisión 0,0,0</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        :root { --primary: #004a99; --accent: #d9534f; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; }
-        
-        /* Panel de Control fuera de AR */
-        #ui-panel {
-            position: absolute; top: 10px; left: 10px; right: 10px;
-            background: white; padding: 15px; border-radius: 10px;
-            z-index: 10; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        /* Panel de control que SÍ se verá en iPhone */
+        #alinco-ui {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1000; pointer-events: none; /* Deja pasar los clics al 3D */
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-
-        /* EL BOTÓN QUE DEBE APARECER EN AR */
-        #btn-reset-ar {
-            position: absolute;
-            bottom: 150px; /* Ubicación para que no tape el botón de salida de Google */
-            right: 20px;
-            background-color: var(--primary);
-            color: white;
-            border: 2px solid white;
-            border-radius: 50px;
-            padding: 15px 25px;
-            font-weight: bold;
-            font-size: 14px;
-            z-index: 9999; /* Máxima prioridad */
-            display: none; /* Se activa por JS */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        .btn-panel {
+            pointer-events: auto; background: rgba(255,255,255,0.9);
+            padding: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-
-        .btn-start {
-            width: 100%; padding: 15px; background: var(--accent);
-            color: white; border: none; border-radius: 8px; font-weight: bold;
+        .btn-reset {
+            pointer-events: auto; align-self: flex-end; margin: 20px;
+            padding: 15px 25px; background: #004a99; color: white;
+            border: none; border-radius: 50px; font-weight: bold;
         }
-
-        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
-        .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: red; border: 3px solid white; }
+        input { width: 60px; padding: 5px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <div id="ui-panel">
-        <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--primary);">ALINCO INGENIERÍA</div>
-        <label style="font-size: 10px; color: #666;">ALTURA OBJETIVO (Z)</label>
-        <input type="number" id="z-height" value="0.00" step="0.01" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-        <button class="btn-start" id="btn-start">PROYECTAR EN BODEGA</button>
+    <div id="alinco-ui">
+        <div class="btn-panel">
+            <b style="color:#004a99">ALINCO AR</b> | 
+            Cota Z: <input type="number" id="z-val" value="7.00" step="0.1"> m
+        </div>
+        <button class="btn-reset" id="reset-btn">📍 VOLVER AL QR (0,0,0)</button>
     </div>
 
-    <model-viewer 
-        id="viewer"
-        src="3dExport.glb" 
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        ar-scale="fixed" 
-        camera-controls 
-        shadow-intensity="1">
+    <a-scene 
+        mindar-image="imageTargetSrc: targets.mind;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
         
-        <button id="btn-reset-ar" slot="hotspot-reset" data-position="0 0 0" class="ar-only">
-            📍 IR A ORIGEN (0,0,0)
-        </button>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0" data-normal="0 1 0"></button>
-    </model-viewer>
+        <a-entity id="anchor" mindar-image-target="targetIndex: 0">
+            <a-gltf-model 
+                id="modelo-3d" 
+                src="3dExport.glb" 
+                rotation="90 0 0" 
+                position="0 0 0" 
+                scale="1 1 1">
+            </a-gltf-model>
+        </a-entity>
+    </a-scene>
 
     <script>
-        const viewer = document.querySelector('#viewer');
-        const heightIn = document.querySelector('#z-height');
-        const resetBtn = document.querySelector('#btn-reset-ar');
+        const modelo = document.querySelector('#modelo-3d');
+        const zInput = document.querySelector('#z-val');
+        const resetBtn = document.querySelector('#reset-btn');
 
-        // 1. Detectar cuando entramos a Realidad Aumentada
-        viewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                resetBtn.style.display = 'block'; // Mostrar botón en AR
-            } else {
-                resetBtn.style.display = 'none'; // Ocultar al salir
-            }
+        // Actualizar altura dinámicamente
+        zInput.addEventListener('change', () => {
+            const z = zInput.value;
+            // En A-Frame, los ejes pueden variar, ajustamos según la exportación
+            modelo.setAttribute('position', `0 ${z} 0`);
         });
 
-        // 2. Lógica para volver al 0,0,0
+        // Botón Reset: Lleva la máquina al suelo
         resetBtn.addEventListener('click', () => {
-            viewer.cameraTarget = "0m 0m 0m";
-            viewer.cameraOrbit = "0deg 75deg 2m";
-            // Vibración táctil de confirmación
-            if (navigator.vibrate) navigator.vibrate(60);
-        });
-
-        // 3. Botón principal para iniciar
-        document.querySelector('#btn-start').addEventListener('click', () => {
-            const h = heightIn.value || 0;
-            viewer.cameraTarget = `0m ${h}m 0m`;
-            viewer.activateAR();
+            zInput.value = 0;
+            modelo.setAttribute('position', '0 0 0');
         });
     </script>
 </body>
-</html>
 </html>
