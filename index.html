@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Visor Técnico - Punto de Control</title>
+    <title>Visor AR - Cota 9.65m</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -9,7 +9,7 @@
         body { margin: 0; background-color: #f8f9fa; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Estilo del punto rojo central */
+        /* Punto rojo para el origen (QR) */
         .dot {
             width: 24px;
             height: 24px;
@@ -17,26 +17,17 @@
             border: 3px solid #ffffff;
             background-color: #ff0000;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
-            cursor: pointer;
-            transition: transform 0.2s;
         }
 
-        .dot:hover { transform: scale(1.2); }
-
-        /* Etiqueta del punto */
+        /* Etiqueta de información */
         .label {
             background: #fff;
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             color: #333;
-            display: block;
             font-size: 12px;
             font-weight: bold;
             padding: 4px 8px;
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
             white-space: nowrap;
         }
 
@@ -64,20 +55,25 @@
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
-        camera-target="0m 0m 0m" 
+        camera-target="0m 9.65m 0m" 
         camera-controls 
         shadow-intensity="1"
         exposure="1.2">
 
-        <button class="dot" slot="hotspot-centro" data-position="0m 0m 0m" data-normal="0m 1m 0m">
-            <div class="label">PUNTO CERO (QR)</div>
+        <button class="dot" slot="hotspot-base" data-position="0m 0m 0m" data-normal="0m 1m 0m">
+            <div class="label" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%);">ORIGEN QR</div>
+        </button>
+
+        <button class="dot" slot="hotspot-altura" data-position="0m 9.65m 0m" data-normal="0m 1m 0m" style="background-color: #4285f4; width: 15px; height: 15px;">
+            <div class="label" style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%);">ELEMENTO A 9.65m</div>
         </button>
 
         <button slot="ar-button" id="ar-button">
-            INICIAR INSPECCIÓN EN OBRA
+            INICIAR INSPECCIÓN (COTA 9.65m)
         </button>
 
     </model-viewer>
 
 </body>
+</html>
 </html>
