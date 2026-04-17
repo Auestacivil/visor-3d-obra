@@ -1,108 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Inspección Alta Fidelidad</title>
+    <title>Alinco - Control Maestro BIM</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    
     <style>
         :root { --primary: #004a99; --accent: #d9534f; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #000; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #1a1a1a; }
         
+        /* Panel de Control Estilo Ingeniería */
         #ui-panel {
             position: fixed; top: 10px; left: 10px; right: 10px;
-            background: rgba(255,255,255,0.92); padding: 15px; border-radius: 12px;
-            z-index: 100; color: #333; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px;
+            z-index: 1000; color: #333; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             border-left: 5px solid var(--primary);
         }
 
-        .btn-update {
-            width: 100%; padding: 12px; background: var(--primary);
-            color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px;
+        h2 { margin: 0 0 10px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; }
+
+        /* Estilos de las cajas de texto XYZ */
+        .coord-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .input-box { flex: 1; }
+        .input-box label { display: block; font-size: 9px; font-weight: bold; color: #666; margin-bottom: 2px; }
+        .input-box input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+
+        /* Estilos de Selectores de Color */
+        .color-row { display: flex; gap: 15px; margin-bottom: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .color-item { flex: 1; text-align: center; }
+        .color-item label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; }
+        .color-item input { width: 40px; height: 40px; border: none; cursor: pointer; background: none; }
+
+        .btn-main {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 14px;
         }
 
+        /* Visor 3D */
         model-viewer { width: 100vw; height: 100vh; background-color: #1a1a1a; }
-        .dot-qr { width: 22px; height: 22px; border-radius: 50%; background: #ff0000; border: 3px solid white; }
+
+        /* Hotspots */
+        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 3px solid white; }
+        .label { background: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">ALINCO INGENIERÍA</div>
-        <div style="font-size: 11px; margin-bottom: 12px; color: #555;">MODO: TEXTURAS ORIGINALES + SOMBRAS HD</div>
+        <h2>Alinco Ingeniería - Control Pro</h2>
         
-       <div style="display:flex; gap:5px; margin-bottom:10px;">
-        <div style="flex:1">
-            <label style="font-size:9px; display:block">COORD. X</label>
-            <input type="number" id="x-coord" value="0" step="0.1" style="width:100%; font-size:12px;">
+        <div class="coord-row">
+            <div class="input-box">
+                <label>X (Lateral)</label>
+                <input type="number" id="pos-x" value="0.0" step="0.1">
+            </div>
+            <div class="input-box">
+                <label>Y (Altura)</label>
+                <input type="number" id="pos-y" value="7.0" step="0.1">
+            </div>
+            <div class="input-box">
+                <label>Z (Profund.)</label>
+                <input type="number" id="pos-z" value="0.0" step="0.1">
+            </div>
         </div>
-        <div style="flex:1">
-            <label style="font-size:9px; display:block">COORD. Y</label>
-            <input type="number" id="y-coord" value="0" step="0.1" style="width:100%; font-size:12px;">
+
+        <div class="color-row">
+            <div class="color-item">
+                <label>TUBERÍAS</label>
+                <input type="color" id="pipe-color" value="#ff6600" onchange="updateColors('pipe', this.value)">
+            </div>
+            <div class="color-item">
+                <label>COLUMNAS</label>
+                <input type="color" id="col-color" value="#808080" onchange="updateColors('column', this.value)">
+            </div>
+            <div class="color-item">
+                <label>DUCTOS</label>
+                <input type="color" id="duct-color" value="#00ff00" onchange="updateColors('duct', this.value)">
+            </div>
         </div>
-        <div style="flex:1">
-            <label style="font-size:9px; display:block">COORD. Z</label>
-            <input type="number" id="z-coord" value="7.0" step="0.1" style="width:100%; font-size:12px;">
-        </div>
-        <button onclick="actualizarUbicacion()" style="align-self:flex-end; padding:5px; background:var(--primary); color:white; border:none; border-radius:4px; font-size:10px;">IR</button>
-    </div>
-        
-    <div style="display:flex; gap:10px; margin-bottom:10px; border-top:1px solid #ddd; padding-top:10px;">
-        <div style="flex:1; text-align:center;">
-            <label style="font-size:10px; font-weight:bold; display:block">TUBERÍAS</label>
-            <input type="color" id="color-pipes" value="#ff6600" onchange="cambiarColorMaterial('pipe', this.value)">
-        </div>
-        <div style="flex:1; text-align:center;">
-            <label style="font-size:10px; font-weight:bold; display:block">COLUMNAS</label>
-            <input type="color" id="color-columns" value="#808080" onchange="cambiarColorMaterial('column', this.value)">
-        </div>
+
+        <button class="btn-main" onclick="updateCamera()">IR A UBICACIÓN XYZ</button>
     </div>
 
-    <button class="btn-update" id="btn-update">APLICAR COTA DE DISEÑO</button>
-</div>
     <model-viewer 
-        id="viewer"
+        id="alinco-viewer"
         src="3dExport.glb" 
         ar ar-modes="webxr quick-look" ar-scale="fixed"
         camera-controls 
-        
-        /* MEJORA DE SOMBRAS Y DETALLE */
         shadow-intensity="2.5" 
-        shadow-softness="0.3" 
+        shadow-softness="0.3"
         exposure="1.2"
         environment-image="neutral"
-        tone-mapping="commerce"
-        
-        alt="Modelo BIM Alinco">
+        tone-mapping="commerce">
 
-        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0"></button>
+        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0">
+            <div class="label" style="transform: translateY(-20px)">ORIGEN QR</div>
+        </button>
+
     </model-viewer>
 
     <script>
-        const viewer = document.querySelector('#viewer');
+        const viewer = document.querySelector('#alinco-viewer');
 
-        // MANTENER TEXTURAS Y QUITAR TRANSPARENCIAS
+        // 1. FORZAR OPACIDAD AL CARGAR (Quita las transparencias de Revit)
         viewer.addEventListener('load', () => {
             const model = viewer.model;
-            
             model.materials.forEach((material) => {
-                // 1. Quitamos la transparencia pero RESPETAMOS el color y textura original
                 material.setAlphaMode("OPAQUE");
-                
-                // 2. Potenciamos el brillo metálico de las texturas de Revit
-                const pbr = material.pbrMetallicRoughness;
-                pbr.setRoughnessFactor(0.5); // Ajuste para que el metal no se vea opaco
+                // Mantiene texturas originales pero sólidas
+                material.pbrMetallicRoughness.setRoughnessFactor(0.5);
             });
-            
-            console.log("Gráficos optimizados: Texturas respetadas.");
+            console.log("Modelo sólido cargado.");
         });
 
-        document.querySelector('#btn-update').addEventListener('click', () => {
-            const h = document.querySelector('#z-val').value;
-            viewer.cameraTarget = `0m ${h}m 0m`;
-            // Pequeño feedback táctil
-            if (navigator.vibrate) navigator.vibrate(50);
-        });
+        // 2. FUNCIÓN PARA MOVER CÁMARA (XYZ)
+        function updateCamera() {
+            const x = document.querySelector('#pos-x').value;
+            const y = document.querySelector('#pos-y').value;
+            const z = document.querySelector('#pos-z').value;
+            
+            // Movemos el objetivo de la cámara a las coordenadas de las cajas de texto
+            viewer.cameraTarget = `${x}m ${y}m ${z}m`;
+        }
+
+        // 3. FUNCIÓN PARA CAMBIAR COLORES POR SISTEMA
+        function updateColors(keyword, hexColor) {
+            const rgb = hexToRgb(hexColor);
+            viewer.model.materials.forEach((mat) => {
+                // Si el nombre del material en Revit contiene la palabra (ej: 'pipe')
+                if (mat.name.toLowerCase().includes(keyword.toLowerCase())) {
+                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
+                }
+            });
+        }
+
+        // Utilidad para convertir colores
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
     </script>
 </body>
 </html>
