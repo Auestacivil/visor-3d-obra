@@ -1,101 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Inspección Humax (V6.0)</title>
+    <title>Alinco - Inspección Humax V7.0</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         :root { --primary: #004a99; --accent: #d9534f; }
-        body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: #f5f5f5; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #121212; }
         
-        /* Panel de Control (Siempre visible en 3D) */
         #ui-panel {
-            position: fixed; top: 15px; left: 15px; right: 15px;
-            background: white; padding: 15px; border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 100;
+            position: fixed; top: 10px; left: 10px; right: 10px;
+            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 12px;
+            z-index: 100; color: #333; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
 
-        .input-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-        label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; }
-        
-        input[type="number"] {
-            width: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 18px; font-weight: bold; text-align: center;
-        }
-
-        button#update-3d {
+        .btn-update {
             width: 100%; padding: 12px; background: var(--primary);
-            color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            color: white; border: none; border-radius: 8px; font-weight: bold;
         }
 
-        /* Visor 3D: Fondo blanco para modo gabinete */
-        model-viewer { width: 100vw; height: 100vh; background-color: #fff; }
-
-        /* Puntos de Referencia */
-        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 3px solid white; box-shadow: 0 0 10px red; }
-        .dot-viga { width: 20px; height: 20px; border-radius: 50%; background: #007bff; border: 3px solid white; box-shadow: 0 0 10px #007bff; }
-        .label { background: #fff; border-radius: 4px; padding: 2px 6px; color: #333; font-size: 10px; font-weight: bold; white-space: nowrap; position: absolute; transform: translate(-50%, -150%); }
-
-        /* Ocultar el botón nativo de AR */
-        button slot[name="ar-button"] { display: none !important; }
+        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
+        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 3px solid white; }
     </style>
 </head>
 <body>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; color: var(--primary); margin-bottom: 10px;">ALINCO: INSPECCIÓN HUMAX</div>
-        <div class="input-group">
-            <label>COTA Z DE VIGA (METROS)</label>
-            <input type="number" id="z-val" value="7.00" step="0.01">
-        </div>
-        <button id="update-3d">AJUSTAR ALTURA EN 3D</button>
-        <div style="font-size: 11px; color: #888; margin-top: 10px; text-align: center;">Use el botón 'Ver en AR' nativo de la viga para proyectar</div>
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">ALINCO INGENIERÍA</div>
+        <div style="font-size: 12px; margin-bottom: 10px;">MODO: OPACIDAD INDUSTRIAL FORZADA</div>
+        <input type="number" id="z-val" value="7.00" step="0.1" style="width: 60px; padding: 5px;"> m
+        <button class="btn-update" id="btn-update">APLICAR COTA Z</button>
     </div>
 
     <model-viewer 
-        id="alinco-viewer"
+        id="viewer"
         src="3dExport.glb" 
-        ar 
-        ar-modes="webxr quick-look" 
-        ar-scale="fixed" 
-        ar-placement="floor"
+        ar ar-modes="webxr quick-look" ar-scale="fixed"
         camera-controls 
-        interaction-prompt="auto"
-        shadow-intensity="1.5"
-        environment-image="legacy"
-        auto-rotate
-        rotation="0 90deg 0"
-        exposure="1.2">
-        
-        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0">
-            <div class="label">PUNTO 0.00 (QR)</div>
-        </button>
-        <button class="dot-viga" id="hotspot-viga" slot="hotspot-1" data-position="0 7 0">
-            <div class="label" id="label-viga">VIGA (7.00m)</div>
-        </button>
+        shadow-intensity="2" 
+        shadow-softness="0.5"
+        exposure="1.5"
+        environment-image="neutral"
+        alt="Modelo BIM Alinco">
 
+        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0"></button>
     </model-viewer>
 
     <script>
-        const viewer = document.querySelector('#alinco-viewer');
-        const zIn = document.querySelector('#z-val');
-        const updateBtn = document.querySelector('#update-3d');
-        const hotspotViga = document.querySelector('#hotspot-viga');
-        const labelViga = document.querySelector('#label-viga');
+        const viewer = document.querySelector('#viewer');
 
-        updateBtn.addEventListener('click', () => {
-            const h = zIn.value || 0;
-            // 1. ZOOM EN 3D: Enfocamos la cámara a la nueva altura
+        // FUNCIÓN MÁGICA: Fuerza a todos los materiales a ser SÓLIDOS
+        viewer.addEventListener('load', () => {
+            const model = viewer.model;
+            
+            // Recorremos todos los materiales del modelo
+            model.materials.forEach((material) => {
+                // Forzamos el modo de mezcla a opaco
+                material.setAlphaMode("OPAQUE");
+                
+                // Si quieres que el metal brille más y se vea más realista:
+                const pbr = material.pbrMetallicRoughness;
+                pbr.setBaseColorFactor([1, 1, 1, 1]); // Asegura que el color sea pleno
+            });
+            
+            console.log("Opacidad forzada aplicada a todos los ductos.");
+        });
+
+        // Control de altura
+        document.querySelector('#btn-update').addEventListener('click', () => {
+            const h = document.querySelector('#z-val').value;
             viewer.cameraTarget = `0m ${h}m 0m`;
-            
-            // 2. ACTUALIZAR PUNTOS: Movemos el hotspot azul a la altura real
-            hotspotViga.setAttribute('data-position', `0 ${h} 0`);
-            labelViga.innerText = `VIGA (${h}m)`;
-            
-            // 3. Confirmación visual rápida
-            updateBtn.innerText = `ALTURA AJUSTADA A ${h}m`;
-            setTimeout(() => updateBtn.innerText = "AJUSTAR ALTURA EN 3D", 1500);
+            alert(`Cota ajustada a ${h}m`);
         });
     </script>
 </body>
