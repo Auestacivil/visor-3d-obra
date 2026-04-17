@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Visor AR con Zoom</title>
+    <title>Alinco - Inspección Pro</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --primary: #004a99; --accent: #d9534f; }
+        :root { --primary: #004a99; --accent: #d9534f; --go-zero: #007bff; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; overflow: hidden; }
         
+        /* Panel de Control */
         #ui-container {
             position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
             transition: transform 0.3s ease-in-out;
@@ -19,28 +20,30 @@
             border-radius: 12px; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .header h2 { margin: 0; font-size: 16px; color: var(--primary); text-transform: uppercase; }
-
         .group { margin-bottom: 15px; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
+
+        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; background-color: var(--accent); color: white; }
         
-        input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
-            font-size: 18px; box-sizing: border-box; font-weight: bold;
+        /* BOTÓN DE RETORNO AL ORIGEN (Visible en AR) */
+        #go-to-zero {
+            position: absolute;
+            bottom: 120px; /* Arriba del botón nativo de AR */
+            right: 20px;
+            background-color: var(--go-zero);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 1000;
+            display: none; /* Se activa por JS */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        .btn-main {
-            width: 100%; padding: 16px; border: none; border-radius: 8px;
-            font-weight: bold; font-size: 16px; cursor: pointer;
-            background-color: var(--accent); color: white;
-        }
-        
-        #toggle-ui {
-            position: absolute; top: 15px; right: 15px; background: var(--primary);
-            color: white; border: none; border-radius: 50%; width: 40px; height: 40px;
-            font-weight: bold; cursor: pointer; z-index: 101;
-        }
+        #toggle-ui { position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-weight: bold; z-index: 101; }
 
         model-viewer { width: 100vw; height: 100vh; background-color: #222; }
         .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: #ff0000; border: 3px solid white; box-shadow: 0 0 15px red; }
@@ -51,19 +54,19 @@
 
     <button id="toggle-ui">▲</button>
 
+    <button id="go-to-zero">📍 IR A ORIGEN 0</button>
+
     <div id="ui-container">
         <div id="ui-panel">
-            <div class="header">
-                <h2>Alinco Ingeniería</h2>
-                <span style="font-size: 10px; font-weight: bold;">ZOOM ACTIVO</span>
+            <div class="header" style="display:flex; justify-content:space-between; color:var(--primary); font-weight:bold; margin-bottom:10px;">
+                <span>ALINCO INGENIERÍA</span>
+                <span>V3.1</span>
             </div>
-
             <div class="group">
-                <label>DEFINIR ALTURA (Z EN METROS)</label>
+                <label>COTA DE INSPECCIÓN (Z)</label>
                 <input type="number" id="z-height" value="0.00" step="0.01">
             </div>
-
-            <button class="btn-main" id="start-ar">ENFOCAR Y PROYECTAR</button>
+            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA</button>
         </div>
     </div>
 
@@ -74,7 +77,6 @@
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
         camera-controls 
-        interpolation-decay="200"
         shadow-intensity="1">
         
         <button class="dot-qr" slot="hotspot-0" data-position="0 0 0" data-normal="0 1 0"></button>
@@ -84,10 +86,28 @@
         const viewer = document.querySelector('#alinco-viewer');
         const heightIn = document.querySelector('#z-height');
         const arBtn = document.querySelector('#start-ar');
+        const zeroBtn = document.querySelector('#go-to-zero');
         const toggleBtn = document.querySelector('#toggle-ui');
         const uiContainer = document.querySelector('#ui-container');
 
-        // Función de Toggle UI
+        // Mostrar el botón de "Ir a Cero" solo cuando estemos en AR
+        viewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                zeroBtn.style.display = 'block';
+            } else {
+                zeroBtn.style.display = 'none';
+            }
+        });
+
+        // Lógica del botón: Resetear cámara al suelo (0,0,0)
+        zeroBtn.addEventListener('click', () => {
+            viewer.cameraTarget = "0m 0m 0m";
+            viewer.cameraOrbit = "0deg 75deg 2m";
+            // Pequeña vibración para confirmar acción
+            if (navigator.vibrate) navigator.vibrate(50);
+        });
+
+        // Toggle UI
         let uiVisible = true;
         toggleBtn.addEventListener('click', () => {
             uiVisible = !uiVisible;
@@ -97,18 +117,9 @@
 
         arBtn.addEventListener('click', () => {
             const h = heightIn.value || 0;
-            
-            // 1. ZOOM: Movemos el objetivo (Target) a la altura definida
             viewer.cameraTarget = `0m ${h}m 0m`;
-            
-            // 2. ACERCAMIENTO: Ajustamos el radio de la cámara a 2 metros del objeto
-            // Formato: (Azimuth, Tilt, Radius)
             viewer.cameraOrbit = `45deg 75deg 2m`; 
-
-            // 3. Iniciar Realidad Aumentada
-            setTimeout(() => {
-                viewer.activateAR();
-            }, 500); // Pequeña pausa para que el zoom se procese antes de entrar a AR
+            viewer.activateAR();
         });
     </script>
 </body>
