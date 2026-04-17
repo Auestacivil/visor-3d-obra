@@ -31,12 +31,35 @@
         <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">ALINCO INGENIERÍA</div>
         <div style="font-size: 11px; margin-bottom: 12px; color: #555;">MODO: TEXTURAS ORIGINALES + SOMBRAS HD</div>
         
-       <div style="display:flex; gap:5px; margin-bottom:10px;"><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='1m 0m 0m'">EJE X</button><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 1m 0m'">EJE Y</button><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 0m 1m'">EJE Z</button><button class="btn-update" style="background:#444; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 0m 0m'">0,0,0</button>
-       </div>
+       <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <div style="flex:1">
+            <label style="font-size:9px; display:block">COORD. X</label>
+            <input type="number" id="x-coord" value="0" step="0.1" style="width:100%; font-size:12px;">
+        </div>
+        <div style="flex:1">
+            <label style="font-size:9px; display:block">COORD. Y</label>
+            <input type="number" id="y-coord" value="0" step="0.1" style="width:100%; font-size:12px;">
+        </div>
+        <div style="flex:1">
+            <label style="font-size:9px; display:block">COORD. Z</label>
+            <input type="number" id="z-coord" value="7.0" step="0.1" style="width:100%; font-size:12px;">
+        </div>
+        <button onclick="actualizarUbicacion()" style="align-self:flex-end; padding:5px; background:var(--primary); color:white; border:none; border-radius:4px; font-size:10px;">IR</button>
+    </div>
         
-        <button class="btn-update" id="btn-update">APLICAR COTA DE DISEÑO</button>
+    <div style="display:flex; gap:10px; margin-bottom:10px; border-top:1px solid #ddd; padding-top:10px;">
+        <div style="flex:1; text-align:center;">
+            <label style="font-size:10px; font-weight:bold; display:block">TUBERÍAS</label>
+            <input type="color" id="color-pipes" value="#ff6600" onchange="cambiarColorMaterial('pipe', this.value)">
+        </div>
+        <div style="flex:1; text-align:center;">
+            <label style="font-size:10px; font-weight:bold; display:block">COLUMNAS</label>
+            <input type="color" id="color-columns" value="#808080" onchange="cambiarColorMaterial('column', this.value)">
+        </div>
     </div>
 
+    <button class="btn-update" id="btn-update">APLICAR COTA DE DISEÑO</button>
+</div>
     <model-viewer 
         id="viewer"
         src="3dExport.glb" 
