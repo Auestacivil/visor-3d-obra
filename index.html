@@ -31,10 +31,8 @@
         <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">ALINCO INGENIERÍA</div>
         <div style="font-size: 11px; margin-bottom: 12px; color: #555;">MODO: TEXTURAS ORIGINALES + SOMBRAS HD</div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <label style="font-size: 12px; font-weight: bold;">ALTURA (Z):</label>
-            <input type="number" id="z-val" value="7.00" step="0.1" style="width: 80px; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
-        </div>
+       <div style="display:flex; gap:5px; margin-bottom:10px;"><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='1m 0m 0m'">EJE X</button><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 1m 0m'">EJE Y</button><button class="btn-update" style="background:#666; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 0m 1m'">EJE Z</button><button class="btn-update" style="background:#444; font-size:11px; flex:1;" onclick="viewer.cameraTarget='0m 0m 0m'">0,0,0</button>
+       </div>
         
         <button class="btn-update" id="btn-update">APLICAR COTA DE DISEÑO</button>
     </div>
