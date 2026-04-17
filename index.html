@@ -1,25 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Alinco AR - Control de Obra</title>
+    
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
     <style>
-        #ui { position: fixed; top: 10px; left: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; }
-        .status { font-size: 10px; color: red; font-weight: bold; }
+        :root { --blue: #004a99; --red: #d9534f; }
+        body { margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; }
+
+        /* INTERFAZ SOBRE LA CÁMARA (No desaparecerá en iPhone) */
+        #alinco-dashboard {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9999; pointer-events: none; /* Permite tocar el 3D */
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .top-bar {
+            pointer-events: auto; background: rgba(255,255,255,0.95);
+            padding: 15px; border-bottom: 3px solid var(--blue);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .bottom-bar {
+            pointer-events: auto; padding: 20px;
+            display: flex; justify-content: center;
+        }
+
+        .btn-reset {
+            background: var(--blue); color: white; border: 2px solid white;
+            padding: 15px 30px; border-radius: 50px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .height-control { font-weight: bold; color: #333; }
+        input { width: 70px; padding: 8px; font-size: 18px; border-radius: 5px; border: 1px solid #ccc; }
+
+        /* Pantalla de carga */
+        #loading-screen {
+            position: fixed; inset: 0; background: #121212; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <div style="font-weight: bold;">ALINCO AR - INSPECCIÓN</div>
-        <div id="status-text" class="status">ESPERANDO QR...</div>
-        <button onclick="location.reload()" style="margin-top:5px;">Recargar App</button>
+    <div id="loading-screen">
+        <div style="font-size: 20px; margin-bottom: 20px;">ALINCO INGENIERÍA</div>
+        <div id="status">BUSCANDO QR DE REFERENCIA...</div>
+    </div>
+
+    <div id="alinco-dashboard">
+        <div class="top-bar">
+            <div class="height-control">
+                COTA Z: <input type="number" id="z-input" value="0.00" step="0.1"> m
+            </div>
+            <div style="font-size: 10px; color: var(--blue); font-weight: bold;">HUMAX V4.0</div>
+        </div>
+
+        <div class="bottom-bar">
+            <button class="btn-reset" id="btn-000">📍 RESET A 0,0,0</button>
+        </div>
     </div>
 
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: true; maxTrack: 1;" 
-        color-space="sRGB" 
+        mindar-image="imageTargetSrc: targets.mind; uiLoading: no; autoStart: true;" 
+        embedded color-space="sRGB" 
         renderer="colorManagement: true, physicallyCorrectLights" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
@@ -30,30 +78,44 @@
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity id="example-target" mindar-image-target="targetIndex: 0">
+        <a-entity id="target-anchor" mindar-image-target="targetIndex: 0">
+            
             <a-gltf-model 
-                id="modelo-render"
+                id="render-glb" 
                 src="#modeloBim" 
                 position="0 0 0" 
                 rotation="90 0 0" 
-                scale="0.1 0.1 0.1">
+                scale="1 1 1">
             </a-gltf-model>
+
+            <a-sphere radius="0.05" color="red"></a-sphere>
         </a-entity>
     </a-scene>
 
     <script>
-        const targetEl = document.querySelector('#example-target');
-        const statusText = document.querySelector('#status-text');
+        const anchor = document.querySelector('#target-anchor');
+        const model = document.querySelector('#render-glb');
+        const loading = document.querySelector('#loading-screen');
+        const zIn = document.querySelector('#z-input');
+        const resetBtn = document.querySelector('#btn-000');
 
-        // Detectar cuando el iPhone encuentra el QR
-        targetEl.addEventListener("targetFound", event => {
-            statusText.innerText = "¡QR DETECTADO!";
-            statusText.style.color = "green";
+        // Cuando el iPhone detecta el QR, quitamos la pantalla de carga
+        anchor.addEventListener("targetFound", () => {
+            loading.style.display = 'none';
+            if (navigator.vibrate) navigator.vibrate(100);
         });
 
-        targetEl.addEventListener("targetLost", event => {
-            statusText.innerText = "QR PERDIDO - APUNTE AL CÓDIGO";
-            statusText.style.color = "red";
+        // Control de altura en tiempo real
+        zIn.addEventListener('input', () => {
+            const h = zIn.value;
+            // Ajustamos la posición Y del modelo (que en A-Frame suele ser la altura)
+            model.setAttribute('position', `0 ${h} 0`);
+        });
+
+        // Botón Reset
+        resetBtn.addEventListener('click', () => {
+            zIn.value = 0;
+            model.setAttribute('position', '0 0 0');
         });
     </script>
 </body>
