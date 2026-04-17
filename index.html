@@ -1,109 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Calibración AR - Humax</title>
+    <title>Control de Obra - Humax</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        model-viewer { width: 100vw; height: 100vh; background-color: #f0f0f0; }
+        body { margin: 0; background-color: #f0f0f0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        model-viewer { width: 100vw; height: 100vh; }
         
-        /* Panel de Control de Coordenadas */
-        .controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .controls label { font-size: 12px; font-weight: bold; color: #333; }
-        .controls input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; width: 80px; }
-        .controls button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* El Punto Rojo (Hotspot) */
-        .dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            border: 2px solid white;
-            background-color: #ff0000;
-            box-shadow: 0 0 10px rgba(255,0,0,0.8);
-        }
-
+        /* Botón principal de Realidad Aumentada */
         #ar-button {
-            background-color: #007bff;
-            border-radius: 8px;
+            background-color: #d9534f;
+            color: white;
+            border-radius: 30px;
             border: none;
             position: absolute;
-            bottom: 20px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 15px 25px;
-            color: white;
+            padding: 20px 40px;
             font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        /* Marcador visual del punto de apoyo (QR) */
+        .hotspot-qr {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            background-color: #ff0000;
+            box-shadow: 0 0 10px rgba(255,0,0,0.8);
         }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <label>COORDENADAS (Metros)</label>
-        <div>
-            X: <input type="number" id="posX" value="-4.85" step="0.01">
-            Y: <input type="number" id="posY" value="0" step="0.01">
-            Z: <input type="number" id="posZ" value="7.16" step="0.01">
-        </div>
-        <button onclick="updatePosition()">ACTUALIZAR PUNTO ROJO</button>
-    </div>
-
     <model-viewer 
-        id="viewer"
         src="3dExport.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
-        camera-target="-4.85m 3.89m 7.16m" 
+        camera-target="0m 4.30m 0m" 
         camera-controls 
-        shadow-intensity="1">
+        shadow-intensity="1"
+        exposure="1.1">
 
-        <button class="dot" id="manual-dot" slot="hotspot-dot" data-position="-4.85m 0m 7.16m" data-normal="0m 1m 0m"></button>
+        <button class="hotspot-qr" slot="hotspot-base" data-position="0m 0m 0m" data-normal="0m 1m 0m">
+        </button>
 
-        <button slot="ar-button" id="ar-button">INICIAR INSPECCIÓN</button>
+        <button slot="ar-button" id="ar-button">
+            INICIAR INSPECCIÓN (ALTURA 4.30m)
+        </button>
+
     </model-viewer>
 
-    <script>
-        function updatePosition() {
-            const x = document.getElementById('posX').value;
-            const y = document.getElementById('posY').value;
-            const z = document.getElementById('posZ').value;
-            const viewer = document.querySelector('#viewer');
-            const dot = document.querySelector('#manual-dot');
-
-            // Actualizamos la posición del punto rojo
-            const newPos = `${x}m ${y}m ${z}m`;
-            dot.setAttribute('data-position', newPos);
-            
-            // También movemos la cámara para ver el punto nuevo
-            viewer.setAttribute('camera-target', newPos);
-            
-            console.log("Nueva ubicación del punto rojo:", newPos);
-        }
-    </script>
-
 </body>
+</html>
 </html>
