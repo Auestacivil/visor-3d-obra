@@ -1,77 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Inspección Pro</title>
+    <title>Alinco AR - Precisión 0,0,0</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --primary: #004a99; --accent: #d9534f; --go-zero: #007bff; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; overflow: hidden; }
+        :root { --primary: #004a99; --accent: #d9534f; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; }
         
-        /* Panel de Control */
-        #ui-container {
-            position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
-            transition: transform 0.3s ease-in-out;
-        }
-
+        /* Panel de Control fuera de AR */
         #ui-panel {
-            background: rgba(255, 255, 255, 0.95); margin: 10px; padding: 20px;
-            border-radius: 12px; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            background: white; padding: 15px; border-radius: 10px;
+            z-index: 10; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        .group { margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
-        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
-
-        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; background-color: var(--accent); color: white; }
-        
-        /* BOTÓN DE RETORNO AL ORIGEN (Visible en AR) */
-        #go-to-zero {
+        /* EL BOTÓN QUE DEBE APARECER EN AR */
+        #btn-reset-ar {
             position: absolute;
-            bottom: 120px; /* Arriba del botón nativo de AR */
+            bottom: 150px; /* Ubicación para que no tape el botón de salida de Google */
             right: 20px;
-            background-color: var(--go-zero);
+            background-color: var(--primary);
             color: white;
             border: 2px solid white;
             border-radius: 50px;
-            padding: 12px 20px;
+            padding: 15px 25px;
             font-weight: bold;
             font-size: 14px;
-            z-index: 1000;
+            z-index: 9999; /* Máxima prioridad */
             display: none; /* Se activa por JS */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
 
-        #toggle-ui { position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-weight: bold; z-index: 101; }
+        .btn-start {
+            width: 100%; padding: 15px; background: var(--accent);
+            color: white; border: none; border-radius: 8px; font-weight: bold;
+        }
 
         model-viewer { width: 100vw; height: 100vh; background-color: #222; }
-        .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: #ff0000; border: 3px solid white; box-shadow: 0 0 15px red; }
-        #ar-button { display: none; }
+        .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: red; border: 3px solid white; }
     </style>
 </head>
 <body>
 
-    <button id="toggle-ui">▲</button>
-
-    <button id="go-to-zero">📍 IR A ORIGEN 0</button>
-
-    <div id="ui-container">
-        <div id="ui-panel">
-            <div class="header" style="display:flex; justify-content:space-between; color:var(--primary); font-weight:bold; margin-bottom:10px;">
-                <span>ALINCO INGENIERÍA</span>
-                <span>V3.1</span>
-            </div>
-            <div class="group">
-                <label>COTA DE INSPECCIÓN (Z)</label>
-                <input type="number" id="z-height" value="0.00" step="0.01">
-            </div>
-            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA</button>
-        </div>
+    <div id="ui-panel">
+        <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--primary);">ALINCO INGENIERÍA</div>
+        <label style="font-size: 10px; color: #666;">ALTURA OBJETIVO (Z)</label>
+        <input type="number" id="z-height" value="0.00" step="0.01" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        <button class="btn-start" id="btn-start">PROYECTAR EN BODEGA</button>
     </div>
 
     <model-viewer 
-        id="alinco-viewer"
+        id="viewer"
         src="3dExport.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
@@ -79,48 +60,42 @@
         camera-controls 
         shadow-intensity="1">
         
+        <button id="btn-reset-ar" slot="hotspot-reset" data-position="0 0 0" class="ar-only">
+            📍 IR A ORIGEN (0,0,0)
+        </button>
+
         <button class="dot-qr" slot="hotspot-0" data-position="0 0 0" data-normal="0 1 0"></button>
     </model-viewer>
 
     <script>
-        const viewer = document.querySelector('#alinco-viewer');
+        const viewer = document.querySelector('#viewer');
         const heightIn = document.querySelector('#z-height');
-        const arBtn = document.querySelector('#start-ar');
-        const zeroBtn = document.querySelector('#go-to-zero');
-        const toggleBtn = document.querySelector('#toggle-ui');
-        const uiContainer = document.querySelector('#ui-container');
+        const resetBtn = document.querySelector('#btn-reset-ar');
 
-        // Mostrar el botón de "Ir a Cero" solo cuando estemos en AR
+        // 1. Detectar cuando entramos a Realidad Aumentada
         viewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                zeroBtn.style.display = 'block';
+                resetBtn.style.display = 'block'; // Mostrar botón en AR
             } else {
-                zeroBtn.style.display = 'none';
+                resetBtn.style.display = 'none'; // Ocultar al salir
             }
         });
 
-        // Lógica del botón: Resetear cámara al suelo (0,0,0)
-        zeroBtn.addEventListener('click', () => {
+        // 2. Lógica para volver al 0,0,0
+        resetBtn.addEventListener('click', () => {
             viewer.cameraTarget = "0m 0m 0m";
             viewer.cameraOrbit = "0deg 75deg 2m";
-            // Pequeña vibración para confirmar acción
-            if (navigator.vibrate) navigator.vibrate(50);
+            // Vibración táctil de confirmación
+            if (navigator.vibrate) navigator.vibrate(60);
         });
 
-        // Toggle UI
-        let uiVisible = true;
-        toggleBtn.addEventListener('click', () => {
-            uiVisible = !uiVisible;
-            uiContainer.style.transform = uiVisible ? 'translateY(0)' : 'translateY(-120%)';
-            toggleBtn.textContent = uiVisible ? '▲' : '▼';
-        });
-
-        arBtn.addEventListener('click', () => {
+        // 3. Botón principal para iniciar
+        document.querySelector('#btn-start').addEventListener('click', () => {
             const h = heightIn.value || 0;
             viewer.cameraTarget = `0m ${h}m 0m`;
-            viewer.cameraOrbit = `45deg 75deg 2m`; 
             viewer.activateAR();
         });
     </script>
 </body>
+</html>
 </html>
