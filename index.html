@@ -1,104 +1,125 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Visor Alinco - Carga Dinámica</title>
+    <title>Alinco - Visor AR Industrial</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #1a1a1a; color: white; }
+        :root { --primary: #004a99; --accent: #d9534f; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; overflow: hidden; }
         
-        /* Panel de Control Estilizado */
-        #ui-panel {
-            position: absolute; top: 15px; left: 15px; right: 15px;
-            background: rgba(255, 255, 255, 0.95); padding: 20px;
-            border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            z-index: 100; color: #333; display: flex; flex-direction: column; gap: 15px;
+        /* Contenedor Principal de UI */
+        #ui-container {
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+            transition: transform 0.3s ease-in-out;
         }
 
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-weight: bold; font-size: 13px; text-transform: uppercase; color: #555; }
+        #ui-panel {
+            background: rgba(255, 255, 255, 0.95); margin: 10px; padding: 20px;
+            border-radius: 12px; color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .header h2 { margin: 0; font-size: 16px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
         
         input[type="number"], input[type="file"] {
-            padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
+            font-size: 15px; box-sizing: border-box; background: white;
         }
 
-        /* Estilo para el botón de carga de archivo */
-        .file-custom {
-            background: #f8f9fa; border: 2px dashed #007bff; padding: 10px;
-            text-align: center; cursor: pointer; border-radius: 6px;
+        .btn-main {
+            width: 100%; padding: 16px; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;
+            background-color: var(--accent); color: white;
+        }
+        
+        #toggle-ui {
+            position: absolute; top: 15px; right: 15px; background: var(--primary);
+            color: white; border: none; border-radius: 50%; width: 40px; height: 40px;
+            font-weight: bold; cursor: pointer; z-index: 101;
         }
 
-        button#ar-start {
-            background-color: #d9534f; color: white; border: none;
-            padding: 15px; border-radius: 8px; font-weight: bold;
-            font-size: 16px; cursor: pointer; transition: 0.3s;
-        }
-        button#ar-start:hover { background-color: #c9302c; }
-
-        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
-
-        /* Botón de AR nativo (oculto para usar el nuestro) */
-        #ar-button { display: none; }
-
-        .dot-qr { width: 22px; height: 22px; border-radius: 50%; background: red; border: 3px solid white; box-shadow: 0 0 10px red; }
+        /* Estilos del Visor */
+        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
+        .dot-qr { width: 24px; height: 24px; border-radius: 50%; background: #ff0000; border: 3px solid white; box-shadow: 0 0 15px red; }
+        #ar-button { display: none; } /* Ocultamos el nativo para usar el nuestro */
     </style>
 </head>
 <body>
 
-    <div id="ui-panel">
-        <div class="input-group">
-            <label>1. Seleccionar Modelo (.glb)</label>
-            <input type="file" id="file-input" accept=".glb">
-        </div>
+    <button id="toggle-ui">▼</button>
 
-        <div class="input-group">
-            <label>2. Altura de Diseño (Z en metros)</label>
-            <input type="number" id="height-input" placeholder="Ej: 7.00" step="0.01" value="0.00">
-        </div>
+    <div id="ui-container">
+        <div id="ui-panel">
+            <div class="header">
+                <h2>Alinco Ingeniería</h2>
+                <span style="font-size: 10px; background: #eee; padding: 3px 7px; border-radius: 10px;">V 2.0</span>
+            </div>
 
-        <button id="ar-start">ACTIVAR REALIDAD AUMENTADA</button>
+            <div class="group">
+                <label>MODELO ESTRUCTURAL (.GLB)</label>
+                <input type="file" id="file-upload" accept=".glb">
+            </div>
+
+            <div class="group">
+                <label>COTA DE INSPECCIÓN (METROS Z)</label>
+                <input type="number" id="z-height" value="0.00" step="0.01">
+            </div>
+
+            <button class="btn-main" id="start-ar">PROYECTAR EN OBRA (1:1)</button>
+        </div>
     </div>
 
     <model-viewer 
-        id="viewer"
+        id="alinco-viewer"
         src="" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
-        camera-target="0m 0m 0m" 
         camera-controls 
         shadow-intensity="1">
-
-        <button class="dot-qr" slot="hotspot-qr" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+        
+        <button class="dot-qr" slot="hotspot-0" data-position="0 0 0" data-normal="0 1 0"></button>
     </model-viewer>
 
     <script>
-        const viewer = document.querySelector('#viewer');
-        const fileInput = document.querySelector('#file-input');
-        const heightInput = document.querySelector('#height-input');
-        const arBtn = document.querySelector('#ar-start');
+        const viewer = document.querySelector('#alinco-viewer');
+        const fileIn = document.querySelector('#file-upload');
+        const heightIn = document.querySelector('#z-height');
+        const arBtn = document.querySelector('#start-ar');
+        const toggleBtn = document.querySelector('#toggle-ui');
+        const uiContainer = document.querySelector('#ui-container');
 
-        // Cargar el archivo seleccionado
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
+        // Carga de archivo local
+        fileIn.addEventListener('change', (e) => {
+            const file = e.target.files[0];
             if (file) {
-                const url = URL.createObjectURL(file);
-                viewer.src = url;
+                viewer.src = URL.createObjectURL(file);
             }
         });
 
-        // Activar AR con los parámetros definidos
+        // Toggle para ocultar interfaz
+        let uiVisible = true;
+        toggleBtn.addEventListener('click', () => {
+            uiVisible = !uiVisible;
+            uiContainer.style.transform = uiVisible ? 'translateY(0)' : 'translateY(-120%)';
+            toggleBtn.textContent = uiVisible ? '▲' : '▼';
+        });
+
+        // Iniciar AR con altura dinámica
         arBtn.addEventListener('click', () => {
             if (!viewer.src) {
-                alert("Por favor, selecciona primero un archivo .glb");
+                alert("Seleccione un archivo GLB primero");
                 return;
             }
-            const z = heightInput.value || 0;
-            viewer.cameraTarget = `0m ${z}m 0m`;
+            const h = heightIn.value || 0;
+            viewer.cameraTarget = `0m ${h}m 0m`;
             viewer.activateAR();
         });
     </script>
-
 </body>
 </html>
