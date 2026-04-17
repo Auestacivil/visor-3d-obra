@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Inspección Humax - Cota 7.00m</title>
+    <title>Inspección Maquinaria - Altura 1.70m</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -9,44 +9,26 @@
         body { margin: 0; background-color: #f8f9fa; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botón de Realidad Aumentada */
-        #ar-button {
-            background-color: #d9534f;
-            color: white;
-            border-radius: 30px;
-            border: none;
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 18px 36px;
-            font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-
-        /* Puntos visuales (Hotspots) */
+        /* El punto rojo central */
         .dot {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 3px solid #ffffff; background-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
         }
 
+        /* Etiqueta del punto */
         .label {
-            background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            color: #333;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 4px 8px;
-            position: absolute;
-            white-space: nowrap;
+            background: #fff; border-radius: 4px; color: #333;
+            font-size: 12px; font-weight: bold; padding: 4px 8px;
+            white-space: nowrap; position: absolute;
+        }
+
+        #ar-button {
+            background-color: #d9534f; color: white; border-radius: 30px;
+            border: none; position: absolute; bottom: 50px; left: 50%;
+            transform: translateX(-50%); padding: 18px 36px;
+            font-weight: bold; font-size: 18px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3); z-index: 10;
         }
     </style>
 </head>
@@ -57,20 +39,23 @@
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
-        camera-target="0m 7m 0m" 
+        
+        /* CAMBIO 1: El visor ahora mirará a 1.70m */
+        camera-target="0m 1.70m 0m" 
+        
         camera-controls 
         shadow-intensity="1">
 
-        <button class="dot" slot="hotspot-suelo" data-position="0m 0m 0m" data-normal="0m 1m 0m" style="background-color: #ff0000;">
-            <div class="label" style="top: 30px;">ORIGEN QR (0.00)</div>
+        <button class="dot" slot="hotspot-suelo" data-position="0m 0m 0m">
+            <div class="label" style="top: 30px; left: 50%; transform: translateX(-50%);">ORIGEN QR</div>
         </button>
 
-        <button class="dot" slot="hotspot-viga" data-position="0m 7m 0m" data-normal="0m 1m 0m" style="background-color: #007bff;">
-            <div class="label" style="top: -35px;">OBJETIVO A 7.00m</div>
+        <button class="dot" slot="hotspot-viga" data-position="0m 1.70m 0m" style="background-color: #007bff;">
+            <div class="label" style="top: -35px; left: 50%; transform: translateX(-50%);">MAQUINA A 1.70m</div>
         </button>
 
         <button slot="ar-button" id="ar-button">
-            INICIAR INSPECCIÓN (7.00m)
+            INICIAR INSPECCIÓN
         </button>
 
     </model-viewer>
