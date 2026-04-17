@@ -1,58 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>App de Inspección - Humax</title>
+    <title>Visor Alinco - Carga Dinámica</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f0f0f0; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #1a1a1a; color: white; }
         
-        /* Panel de Control Superior */
+        /* Panel de Control Estilizado */
         #ui-panel {
-            position: absolute; top: 10px; left: 10px; right: 10px;
-            background: rgba(255, 255, 255, 0.9); padding: 15px;
-            border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            z-index: 100; display: flex; flex-direction: column; gap: 10px;
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            background: rgba(255, 255, 255, 0.95); padding: 20px;
+            border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 100; color: #333; display: flex; flex-direction: column; gap: 15px;
         }
 
-        label { font-weight: bold; font-size: 14px; color: #333; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 13px; text-transform: uppercase; color: #555; }
         
-        input {
-            padding: 10px; border: 1px solid #ccc; border-radius: 4px;
-            font-size: 16px; width: 100%; box-sizing: border-box;
+        input[type="number"], input[type="file"] {
+            padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;
         }
 
-        button#update-btn {
-            background-color: #007bff; color: white; border: none;
-            padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer;
+        /* Estilo para el botón de carga de archivo */
+        .file-custom {
+            background: #f8f9fa; border: 2px dashed #007bff; padding: 10px;
+            text-align: center; cursor: pointer; border-radius: 6px;
         }
 
-        /* Visor 3D */
-        model-viewer { width: 100vw; height: 100vh; background-color: #eee; }
-
-        #ar-button {
-            background-color: #d9534f; color: white; border-radius: 30px;
-            border: none; position: absolute; bottom: 30px; left: 50%;
-            transform: translateX(-50%); padding: 15px 35px;
-            font-weight: bold; font-size: 18px; z-index: 10;
+        button#ar-start {
+            background-color: #d9534f; color: white; border: none;
+            padding: 15px; border-radius: 8px; font-weight: bold;
+            font-size: 16px; cursor: pointer; transition: 0.3s;
         }
+        button#ar-start:hover { background-color: #c9302c; }
 
-        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 2px solid white; }
+        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
+
+        /* Botón de AR nativo (oculto para usar el nuestro) */
+        #ar-button { display: none; }
+
+        .dot-qr { width: 22px; height: 22px; border-radius: 50%; background: red; border: 3px solid white; box-shadow: 0 0 10px red; }
     </style>
 </head>
 <body>
 
     <div id="ui-panel">
-        <label for="height-input">Altura de Inspección (Metros):</label>
-        <input type="number" id="height-input" placeholder="Ej: 7.00" step="0.01" value="0.00">
-        <button id="update-btn">ACTUALIZAR VISOR</button>
-        <div id="status" style="font-size: 11px; color: #666;">Punto 0 fijado en QR</div>
+        <div class="input-group">
+            <label>1. Seleccionar Modelo (.glb)</label>
+            <input type="file" id="file-input" accept=".glb">
+        </div>
+
+        <div class="input-group">
+            <label>2. Altura de Diseño (Z en metros)</label>
+            <input type="number" id="height-input" placeholder="Ej: 7.00" step="0.01" value="0.00">
+        </div>
+
+        <button id="ar-start">ACTIVAR REALIDAD AUMENTADA</button>
     </div>
 
     <model-viewer 
         id="viewer"
-        src="3dExport.glb" 
+        src="" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="fixed" 
@@ -61,20 +71,32 @@
         shadow-intensity="1">
 
         <button class="dot-qr" slot="hotspot-qr" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
-
-        <button slot="ar-button" id="ar-button">INICIAR AR</button>
     </model-viewer>
 
     <script>
         const viewer = document.querySelector('#viewer');
+        const fileInput = document.querySelector('#file-input');
         const heightInput = document.querySelector('#height-input');
-        const updateBtn = document.querySelector('#update-btn');
+        const arBtn = document.querySelector('#ar-start');
 
-        updateBtn.addEventListener('click', () => {
-            const zHeight = heightInput.value || 0;
-            // Cambiamos el objetivo de la cámara dinámicamente
-            viewer.cameraTarget = `0m ${zHeight}m 0m`;
-            alert(`Visor ajustado a ${zHeight} metros`);
+        // Cargar el archivo seleccionado
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                viewer.src = url;
+            }
+        });
+
+        // Activar AR con los parámetros definidos
+        arBtn.addEventListener('click', () => {
+            if (!viewer.src) {
+                alert("Por favor, selecciona primero un archivo .glb");
+                return;
+            }
+            const z = heightInput.value || 0;
+            viewer.cameraTarget = `0m ${z}m 0m`;
+            viewer.activateAR();
         });
     </script>
 
