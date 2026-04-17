@@ -1,36 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Visor de Inspección - Equipos Naranjas</title>
+    <title>Alinco - Inspección Alta Fidelidad</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --primary: #004a99; --accent: #ff6600; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #1a1a1a; }
+        :root { --primary: #004a99; --accent: #d9534f; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: #000; }
         
         #ui-panel {
             position: fixed; top: 10px; left: 10px; right: 10px;
-            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 12px;
-            z-index: 100; color: #333; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            background: rgba(255,255,255,0.92); padding: 15px; border-radius: 12px;
+            z-index: 100; color: #333; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            border-left: 5px solid var(--primary);
         }
 
         .btn-update {
             width: 100%; padding: 12px; background: var(--primary);
-            color: white; border: none; border-radius: 8px; font-weight: bold;
+            color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px;
         }
 
-        model-viewer { width: 100vw; height: 100vh; background-color: #222; }
-        .dot-qr { width: 20px; height: 20px; border-radius: 50%; background: red; border: 3px solid white; }
+        model-viewer { width: 100vw; height: 100vh; background-color: #1a1a1a; }
+        .dot-qr { width: 22px; height: 22px; border-radius: 50%; background: #ff0000; border: 3px solid white; }
     </style>
 </head>
 <body>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">CONTROL DE INSPECCIÓN</div>
-        <div style="font-size: 11px; margin-bottom: 10px;">ESTADO: EQUIPOS NARANJAS / OPACIDAD FORZADA</div>
-        <input type="number" id="z-val" value="7.00" step="0.1" style="width: 60px; padding: 5px;"> m
-        <button class="btn-update" id="btn-update">ACTUALIZAR COTA Z</button>
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 4px;">ALINCO INGENIERÍA</div>
+        <div style="font-size: 11px; margin-bottom: 12px; color: #555;">MODO: TEXTURAS ORIGINALES + SOMBRAS HD</div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="font-size: 12px; font-weight: bold;">ALTURA (Z):</label>
+            <input type="number" id="z-val" value="7.00" step="0.1" style="width: 80px; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+        </div>
+        
+        <button class="btn-update" id="btn-update">APLICAR COTA DE DISEÑO</button>
     </div>
 
     <model-viewer 
@@ -38,9 +44,15 @@
         src="3dExport.glb" 
         ar ar-modes="webxr quick-look" ar-scale="fixed"
         camera-controls 
-        shadow-intensity="2" 
+        
+        /* MEJORA DE SOMBRAS Y DETALLE */
+        shadow-intensity="2.5" 
+        shadow-softness="0.3" 
         exposure="1.2"
-        environment-image="neutral">
+        environment-image="neutral"
+        tone-mapping="commerce"
+        
+        alt="Modelo BIM Alinco">
 
         <button class="dot-qr" slot="hotspot-0" data-position="0 0 0"></button>
     </model-viewer>
@@ -48,30 +60,27 @@
     <script>
         const viewer = document.querySelector('#viewer');
 
-        // PROCESAMIENTO DE MATERIALES: Color y Opacidad
+        // MANTENER TEXTURAS Y QUITAR TRANSPARENCIAS
         viewer.addEventListener('load', () => {
             const model = viewer.model;
             
             model.materials.forEach((material) => {
-                // 1. Forzar opacidad total en todos los elementos
+                // 1. Quitamos la transparencia pero RESPETAMOS el color y textura original
                 material.setAlphaMode("OPAQUE");
-
-                // 2. Aplicar color naranja a los equipos
-                // El script busca materiales que suelen ser de equipos o aplica a todo si prefieres
+                
+                // 2. Potenciamos el brillo metálico de las texturas de Revit
                 const pbr = material.pbrMetallicRoughness;
-                
-                // Color Naranja Industrial [R, G, B, A]
-                pbr.setBaseColorFactor([1.0, 0.4, 0.0, 1.0]);
-                
-                // Ajuste de realismo: menos rugosidad para un acabado metálico/plástico limpio
-                pbr.setRoughnessFactor(0.4);
-                pbr.setMetallicFactor(0.3);
+                pbr.setRoughnessFactor(0.5); // Ajuste para que el metal no se vea opaco
             });
+            
+            console.log("Gráficos optimizados: Texturas respetadas.");
         });
 
         document.querySelector('#btn-update').addEventListener('click', () => {
             const h = document.querySelector('#z-val').value;
             viewer.cameraTarget = `0m ${h}m 0m`;
+            // Pequeño feedback táctil
+            if (navigator.vibrate) navigator.vibrate(50);
         });
     </script>
 </body>
