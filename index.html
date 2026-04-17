@@ -1,69 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Humax - Inspección Técnica V15</title>
+    <title>Humax - Inspección Pro V16</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     
     <style>
-        :root { --primary: #007bff; --dark: #1a1a1a; }
+        :root { --primary: #007bff; --dark: #121212; --accent: #00c8ff; }
         body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--dark); overflow: hidden; }
 
-        /* MENÚ LATERAL HUMAX */
+        /* PANEL LATERAL HUMAX */
         #side-panel {
             position: fixed; top: 0; left: 0; width: 280px; height: 100%;
             background: rgba(255, 255, 255, 0.98);
-            box-shadow: 2px 0 15px rgba(0,0,0,0.5);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.6);
             z-index: 1000;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column;
-            border-right: 4px solid var(--primary);
+            border-right: 5px solid var(--primary);
         }
-
         #side-panel.collapsed { transform: translateX(-100%); }
 
         #toggle-btn {
-            position: absolute; top: 20px; right: -45px;
-            width: 45px; height: 45px;
+            position: absolute; top: 20px; right: -50px;
+            width: 50px; height: 50px;
             background: var(--primary); color: white;
-            border: none; border-radius: 0 8px 8px 0;
-            cursor: pointer; font-size: 20px; box-shadow: 3px 0 10px rgba(0,0,0,0.3);
+            border: none; border-radius: 0 12px 12px 0;
+            cursor: pointer; font-size: 22px;
             display: flex; align-items: center; justify-content: center;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.3);
         }
 
-        .content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .header { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        .header img { height: 22px; }
-        .header h2 { margin: 0; font-size: 15px; color: var(--primary); text-transform: uppercase; }
+        .content { padding: 25px; overflow-y: auto; flex-grow: 1; }
+        .header { margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; text-align: center; }
+        .header img { height: 30px; margin-bottom: 10px; }
+        .header h2 { margin: 0; font-size: 14px; color: var(--primary); letter-spacing: 2px; }
 
-        .section-title { font-size: 9px; font-weight: bold; color: #888; text-transform: uppercase; margin: 15px 0 8px; border-left: 3px solid var(--primary); padding-left: 5px; }
+        .section-title { font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; margin: 20px 0 10px; display: flex; align-items: center; gap: 10px; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #eee; }
 
-        .row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .row { display: flex; flex-direction: column; gap: 12px; }
         .item { display: flex; align-items: center; justify-content: space-between; }
-        label { font-size: 11px; font-weight: bold; color: #444; }
-        input[type="number"] { width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 6px; text-align: center; }
+        label { font-size: 12px; font-weight: bold; color: #444; }
+        input[type="number"] { width: 90px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; text-align: center; background: #fcfcfc; }
         
-        .color-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
-        .color-item { display: flex; align-items: center; justify-content: space-between; background: #f0f2f5; padding: 8px; border-radius: 8px; }
-        input[type="color"] { width: 40px; height: 28px; border: none; cursor: pointer; background: none; }
+        .color-item { display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eee; }
+        input[type="color"] { width: 45px; height: 32px; border: none; cursor: pointer; background: none; }
 
         .btn-apply {
-            margin-top: 15px; width: 100%; padding: 15px;
-            background: var(--primary); color: white; border: none;
-            border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+            margin-top: 25px; width: 100%; padding: 18px;
+            background: linear-gradient(135deg, var(--primary), #0056b3);
+            color: white; border: none; border-radius: 12px;
+            font-weight: 900; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.4);
         }
 
-        /* BOTÓN AR MEJORADO */
-        model-viewer::part(ar-button) {
-            background-color: var(--primary);
-            border-radius: 50%;
-            border: 4px solid white;
-            width: 65px; height: 65px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            bottom: 30px;
-            right: 30px;
+        /* --- SUPER BOTÓN REALIDAD AUMENTADA --- */
+        #custom-ar-button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 14px;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            z-index: 100;
         }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 200, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0); }
+        }
+
+        #custom-ar-button img { width: 20px; filter: invert(1); }
 
         model-viewer { width: 100vw; height: 100vh; background-color: var(--dark); }
     </style>
@@ -72,33 +95,37 @@
 
     <div id="side-panel">
         <button id="toggle-btn">☰</button>
-        
         <div class="content">
             <div class="header">
                 <img src="https://static.wixstatic.com/media/d9341b_5409b35b60e44f808778f6c3821035b6~mv2.png/v1/fill/w_366,h_76,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/D9341B_Logo%20Humax_png.png" alt="Humax Logo">
-                <h2>BIM CONTROL</h2>
+                <h2>INSPECCIÓN BIM</h2>
             </div>
 
-            <div class="section-title">Coordenadas de Obra</div>
+            <div class="section-title">Coordenadas</div>
             <div class="row">
                 <div class="item"><label>EJE X</label><input type="number" id="pos-x" value="0.0"></div>
-                <div class="item"><label>COTA Y</label><input type="number" id="pos-y" value="7.0"></div>
+                <div class="item"><label>EJE Y (COTA)</label><input type="number" id="pos-y" value="7.0"></div>
                 <div class="item"><label>EJE Z</label><input type="number" id="pos-z" value="0.0"></div>
             </div>
 
             <div class="section-title">Sistemas Humax</div>
-            <div class="color-grid">
-                <div class="color-item"><label>CONDUCTOS</label><input type="color" id="conduct-color" value="#ff6600"></div>
-                <div class="color-item"><label>ESTRUCTURA</label><input type="color" id="struct-color" value="#808080"></div>
-                <div class="color-item"><label>UMA PETROBRAS</label><input type="color" id="uma-color" value="#28a745"></div>
-                <div class="color-item"><label>EXTRACTOR (YFISQ)</label><input type="color" id="ext-color" value="#007bff"></div>
-            </div>
+            <div class="color-item"><label>CONDUCTOS</label><input type="color" id="conduct-color" value="#ff6600"></div>
+            <div class="color-item"><label>ESTRUCTURA</label><input type="color" id="struct-color" value="#808080"></div>
+            <div class="color-item"><label>UMA PETROBRAS</label><input type="color" id="uma-color" value="#28a745"></div>
+            <div class="color-item"><label>EXTRACTOR YFISQ</label><input type="color" id="ext-color" value="#007bff"></div>
 
-            <button class="btn-apply" onclick="aplicarCambios()">Actualizar Modelo</button>
+            <button class="btn-apply" onclick="aplicarCambios()">ACTUALIZAR OBRA</button>
         </div>
     </div>
 
-    <model-viewer id="viewer" src="3dExport.glb" ar ar-modes="webxr quick-look" ar-scale="fixed" camera-controls shadow-intensity="2" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="viewer" src="3dExport.glb" ar ar-modes="webxr quick-look" ar-scale="fixed" camera-controls shadow-intensity="2" exposure="1.2" environment-image="neutral">
+        
+        <button slot="ar-button" id="custom-ar-button">
+            <img src="https://modelviewer.dev/assets/ic_view_in_ar_new_googblue_48dp.png" alt="AR">
+            VER EN SITIO REAL
+        </button>
+
+    </model-viewer>
 
     <script>
         const panel = document.getElementById('side-panel');
@@ -125,7 +152,6 @@
 
         function aplicarCambios() {
             if (!viewer.model) return;
-
             viewer.cameraTarget = `${document.getElementById('pos-x').value}m ${document.getElementById('pos-y').value}m ${document.getElementById('pos-z').value}m`;
 
             const cColor = hexToRgb(document.getElementById('conduct-color').value);
@@ -137,30 +163,17 @@
                 const name = (mat.name || "").toLowerCase();
                 blindarOpacidad(mat);
 
-                // Lógica de nombres según tus imágenes
-                if (name.includes('conductos')) {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([cColor.r/255, cColor.g/255, cColor.b/255, 1]);
-                }
-                if (name.includes('estructura')) {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([sColor.r/255, sColor.g/255, sColor.b/255, 1]);
-                }
-                if (name.includes('uma_petrobras') || name.includes('uma')) {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([uColor.r/255, uColor.g/255, uColor.b/255, 1]);
-                }
-                if (name.includes('yfisq-575d4-5') || name.includes('extractor')) {
-                    mat.pbrMetallicRoughness.setBaseColorFactor([eColor.r/255, eColor.g/255, eColor.b/255, 1]);
-                }
+                if (name.includes('conductos')) mat.pbrMetallicRoughness.setBaseColorFactor([cColor.r/255, cColor.g/255, cColor.b/255, 1]);
+                if (name.includes('estructura')) mat.pbrMetallicRoughness.setBaseColorFactor([sColor.r/255, sColor.g/255, sColor.b/255, 1]);
+                if (name.includes('uma_petrobras') || name.includes('uma')) mat.pbrMetallicRoughness.setBaseColorFactor([uColor.r/255, uColor.g/255, uColor.b/255, 1]);
+                if (name.includes('yfisq-575d4-5') || name.includes('extractor')) mat.pbrMetallicRoughness.setBaseColorFactor([eColor.r/255, eColor.g/255, eColor.b/255, 1]);
             });
 
             if(window.innerWidth < 600) { panel.classList.add('collapsed'); toggleBtn.innerText = '➔'; }
         }
 
         function hexToRgb(hex) {
-            return {
-                r: parseInt(hex.slice(1, 3), 16),
-                g: parseInt(hex.slice(3, 5), 16),
-                b: parseInt(hex.slice(5, 7), 16)
-            };
+            return { r: parseInt(hex.slice(1, 3), 16), g: parseInt(hex.slice(3, 5), 16), b: parseInt(hex.slice(5, 7), 16) };
         }
     </script>
 </body>
