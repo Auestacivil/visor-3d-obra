@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Alinco - Panel Lateral Humax</title>
+    <title>Humax - Control de Obra (Pro V14)</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     
     <style>
-        :root { --primary: #004a99; --dark: #1a1a1a; --light: #f8f9fa; }
+        :root { --primary: #007bff; --dark: #1a1a1a; --light: #f8f9fa; --danger: #dc3545; }
         body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--dark); overflow: hidden; }
 
         /* CONTENEDOR DEL MENÚ LATERAL */
         #side-panel {
-            position: fixed; top: 0; left: 0; width: 260px; height: 100%;
+            position: fixed; top: 0; left: 0; width: 280px; height: 100%;
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 2px 0 15px rgba(0,0,0,0.5);
             z-index: 1000;
@@ -21,7 +21,6 @@
             border-right: 4px solid var(--primary);
         }
 
-        /* Clase para ocultar el menú */
         #side-panel.collapsed { transform: translateX(-100%); }
 
         /* BOTÓN DE TOGGLE (El que abre/cierra) */
@@ -37,8 +36,10 @@
 
         .content { padding: 20px; overflow-y: auto; flex-grow: 1; }
 
-        .header { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .header h2 { margin: 0; font-size: 16px; color: var(--primary); }
+        .header { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        /* Logo de Humax (Ajusta la ruta si es necesario) */
+        .header img { height: 24px; }
+        .header h2 { margin: 0; font-size: 16px; color: var(--primary); text-transform: uppercase; }
         .header p { margin: 5px 0 0; font-size: 10px; color: #666; font-weight: bold; }
 
         .section-title { font-size: 9px; font-weight: bold; color: #888; text-transform: uppercase; margin: 15px 0 8px; letter-spacing: 1px; }
@@ -59,6 +60,26 @@
             text-transform: uppercase; font-size: 13px;
         }
 
+        /* MEJORA DEL BOTÓN DE AR NATIVO */
+        model-viewer::part(ar-button) {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            border: 3px solid white;
+            width: 60px; height: 60px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            bottom: 30px;
+            right: 30px;
+        }
+
+        model-viewer::part(ar-button):hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
         model-viewer { width: 100vw; height: 100vh; background-color: var(--dark); }
     </style>
 </head>
@@ -69,9 +90,10 @@
         
         <div class="content">
             <div class="header">
-                <h2>ALINCO</h2>
-                <p>CONTROL BIM - HUMAX PRO</p>
+                <img src="https://static.wixstatic.com/media/d9341b_5409b35b60e44f808778f6c3821035b6~mv2.png/v1/fill/w_366,h_76,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/D9341B_Logo%20Humax_png.png" alt="Humax Logo">
+                <h2>CONTROL BIM</h2>
             </div>
+            <p style="font-size: 9px; color: #888; font-weight: bold; margin: -10px 0 20px 0; text-align: center;">PROYECTO HUMAX PRO</p>
 
             <div class="section-title">Navegación XYZ</div>
             <div class="row">
@@ -92,7 +114,9 @@
         </div>
     </div>
 
-    <model-viewer id="viewer" src="3dExport.glb" ar ar-modes="webxr quick-look" ar-scale="fixed" camera-controls shadow-intensity="2" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="viewer" src="3dExport.glb" ar ar-modes="webxr quick-look" ar-scale="fixed" camera-controls shadow-intensity="2" exposure="1.2" environment-image="neutral">
+        <button slot="ar-button" style="display:none;"></button>
+    </model-viewer>
 
     <script>
         const panel = document.getElementById('side-panel');
@@ -152,7 +176,7 @@
                 }
             });
 
-            // Cerrar menú automáticamente al aplicar (opcional para móviles)
+            // Cerrar menú automáticamente en móviles
             if(window.innerWidth < 600) {
                 panel.classList.add('collapsed');
                 toggleBtn.innerText = '➔';
